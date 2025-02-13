@@ -136,4 +136,4 @@ spec:
             - name: GROUP_ID
               value: "my-group"
             - name: TOPIC
-              value: "james-topic"
+              value: "my-topic"
