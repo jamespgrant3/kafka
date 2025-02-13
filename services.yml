@@ -1,0 +1,139 @@
+apiVersion: v1
+kind: Service
+metadata:
+  namespace: kafka
+  name: kafka-ui
+  labels:
+    app: kafka-ui
+spec:
+  ports:
+  - port: 8080
+    name: server
+  selector:
+    app: kafka-ui
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: kafka-ui
+  name: kafka-ui
+  namespace: kafka
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: kafka-ui
+  template:
+    metadata:
+      labels:
+        app: kafka-ui
+    spec:
+      hostname: kafka
+      containers:
+        - name: kafka-ui
+          image: provectuslabs/kafka-ui
+          ports:
+            - containerPort: 8080
+          env:
+            - name: KAFKA_CLUSTERS_0_NAME
+              value: kafka
+            - name: KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS
+              value: kafka-broker:9092
+            - name: KAFKA_CLUSTERS_0_ZOOKEEPER
+              value: zookeeper:2181
+          imagePullPolicy: IfNotPresent
+---
+apiVersion: v1
+kind: Service
+metadata:
+  namespace: kafka
+  name: producer
+  labels:
+    app: producer
+spec:
+  type: NodePort
+  ports:
+  - port: 3000
+    name: producer
+    targetPort: 3000
+    nodePort: 30000
+  selector:
+    app: producer
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: producer
+  namespace: kafka
+spec:
+  selector:
+    matchLabels:
+      app: producer
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: producer
+    spec:
+      containers:
+        - name: producer
+          imagePullPolicy: IfNotPresent
+          image: producer:v1
+          ports:
+            - containerPort: 3000
+              name: producer
+          env:
+            - name: BROKER
+              value: kafka-broker:9092
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  namespace: kafka
+  name: consumer
+  labels:
+    app: consumer
+spec:
+  ports:
+  - port: 3000
+    name: consumer
+    targetPort: 3000
+  selector:
+    app: consumer
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: consumer
+  namespace: kafka
+spec:
+  selector:
+    matchLabels:
+      app: consumer
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: consumer
+    spec:
+      containers:
+        - name: consumer
+          imagePullPolicy: IfNotPresent
+          image: consumer:v1
+          ports:
+            - containerPort: 3000
+              name: consumer
+          env:
+            - name: CLIENT_ID
+              value: "demo-app"
+            - name: BROKER
+              value: kafka-broker:9092
+            - name: GROUP_ID
+              value: "my-group"
+            - name: TOPIC
+              value: "james-topic"
