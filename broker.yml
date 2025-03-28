@@ -1,4 +1,12 @@
 apiVersion: v1
+kind: Namespace
+metadata:
+  name: kafka
+  labels:
+    name: kafka
+---
+
+apiVersion: v1
 kind: Service
 metadata:
   namespace: kafka
@@ -88,52 +96,3 @@ spec:
           env:
             - name: BROKER
               value: kafka-broker:9092
----
-
-apiVersion: v1
-kind: Service
-metadata:
-  namespace: kafka
-  name: consumer
-  labels:
-    app: consumer
-spec:
-  ports:
-  - port: 3000
-    name: consumer
-    targetPort: 3000
-  selector:
-    app: consumer
----
-
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: consumer
-  namespace: kafka
-spec:
-  selector:
-    matchLabels:
-      app: consumer
-  replicas: 1
-  template:
-    metadata:
-      labels:
-        app: consumer
-    spec:
-      containers:
-        - name: consumer
-          imagePullPolicy: IfNotPresent
-          image: consumer:v1
-          ports:
-            - containerPort: 3000
-              name: consumer
-          env:
-            - name: CLIENT_ID
-              value: "demo-app"
-            - name: BROKER
-              value: kafka-broker:9092
-            - name: GROUP_ID
-              value: "my-group"
-            - name: TOPIC
-              value: "my-topic"

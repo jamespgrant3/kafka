@@ -1,0 +1,46 @@
+apiVersion: v1
+kind: Service
+metadata:
+  namespace: kafka
+  name: kafka-ui
+  labels:
+    app: kafka-ui
+spec:
+  ports:
+  - port: 8080
+    name: server
+  selector:
+    app: kafka-ui
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: kafka-ui
+  name: kafka-ui
+  namespace: kafka
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: kafka-ui
+  template:
+    metadata:
+      labels:
+        app: kafka-ui
+    spec:
+      hostname: kafka
+      containers:
+        - name: kafka-ui
+          image: provectuslabs/kafka-ui
+          ports:
+            - containerPort: 8080
+          env:
+            - name: KAFKA_CLUSTERS_0_NAME
+              value: kafka
+            - name: KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS
+              value: kafka-broker:9092
+            - name: KAFKA_CLUSTERS_0_ZOOKEEPER
+              value: zookeeper:2181
+          imagePullPolicy: IfNotPresent
